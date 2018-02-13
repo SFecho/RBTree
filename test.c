@@ -45,7 +45,7 @@ int main( int argc,char* argv[] )
 	rb_tree * tree = get_rb_tree( cmp );
 
 	int i = 11;
-	for (i = 0; i < 7; i++ )
+	for (i = 0; i < 8; i++ )
 		tree->rb_insert(tree, &i, &i, sizeof(int), sizeof(int));
 	
 	iterator * itr = get_iterator(tree);
@@ -62,8 +62,27 @@ int main( int argc,char* argv[] )
 	printf("\n");
 	preorder_traversal(tree, tree->root);
 	printf("\n");
+	printf("delete %d\n", 6);
+	
+	i= 6;
+	
+	tree->rb_delete(tree, &i );
+	
+	
+	while( itr->has_next(tree, itr) )
+	{
+		const rb_node * node = itr->get_next(tree, itr);
+		printf("%d", *(int*)(node->key));
+		if (node->color == BLACK)
+			printf("B\t");
+		else
+			printf("R\t");
+	}
+	printf("\n");
+	preorder_traversal(tree, tree->root);
+	printf("\n");
+	printf("\n");
 	destroy_rb(tree);
-
 
 	return 0;
 }

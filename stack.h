@@ -13,6 +13,7 @@ struct _stack
 {
 	st_node *top;
 	int size;
+	
 	int (*push)( stack * st, void * data, int data_size);
 	void (*pop)( stack * st );
 	void* (*get_top)( stack *st );

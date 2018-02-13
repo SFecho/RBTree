@@ -232,88 +232,81 @@ static void transplant(rb_tree *tree, rb_node * delete_node, rb_node * next_node
 
 static void delete_fix_up(rb_tree * tree, rb_node * node)
 {
-	while (node != tree->root && node->color == BLACK){
-		if (node == node->parent->left){
-			rb_node* w = node->parent->right;
+	rb_node* brothers = tree->nil;
+	while (node != tree->root && node->color == BLACK)
+	{
+		if (node == node->parent->left)
+		{
+			brothers = node->parent->right;
 
 			//情况1 node的兄弟是红色的，通过
-			if (RED == w->color){
-				w->color = BLACK;
-				w->parent->color = RED;
+			if (RED == brothers->color)
+			{
+				brothers->color = BLACK;
+				brothers->parent->color = RED;
 				left_rotate(tree, node->parent);
-				w = node->parent->right;
+				brothers = node->parent->right;
 			}//处理完情况1之后，w.color== BLACK ， 情况就变成2 3 4 了
 
 			//情况2 node的兄弟是黑色的，并且其儿子都是黑色的。
-			if (w->left->color == BLACK && w->right->color == BLACK){
-				if (node->parent->color == RED){
-					node->parent->color = BLACK;
-					w->color = RED;
-
-					break;
-				}
-				else{
-					w->color = RED;
-					node = node->parent;//node.p左右是平衡的，但是node.p处少了一个黑结点，所以把node.p作为新的node继续循环
-					continue;
-				}
+			if (brothers->left->color == BLACK && brothers->right->color == BLACK)
+			{
+				brothers->color = RED;
+				node = node->parent;//node.p左右是平衡的，但是node.p处少了一个黑结点，所以把node.p作为新的node继续循环
+					
 			}
 
 			//情况3 w为黑色的，左孩子为红色。（走到这一步，说明w左右不同时为黑色。）
-			if (w->right->color == BLACK){
-				w->left->color = BLACK;
-				w->color = RED;
-				right_rotate(tree, w);
-				w = node->parent->right;
+			else if (brothers->right->color == BLACK)
+			{
+				brothers->left->color = BLACK;
+				brothers->color = RED;
+				right_rotate(tree, brothers);
+				brothers = node->parent->right;
 			}//处理完之后，变成情况4
 
 			//情况4 走到这一步说明w为黑色， w的左孩子为黑色， 右孩子为红色。
 
-			w->color = node->parent->color;
+			brothers->color = node->parent->color;
 			node->parent->color = BLACK;
-			w->right->color = BLACK;
+			brothers->right->color = BLACK;
 			left_rotate(tree, node->parent);
 			node = tree->root;
 		}
 		else{
-			rb_node* w = node->parent->left;
+			brothers = node->parent->left;
 			//1
-			if (w->color == RED){
-				w->color = BLACK;
+			if (brothers->color == RED)
+			{
+				brothers->color = BLACK;
 				node->parent->color = RED;
 				right_rotate(tree, node->parent);
-				w = node->parent->left;
+				brothers = node->parent->left;
 			}
 			//2
-			if (w->left->color == BLACK && w->right->color == BLACK){
-				if (node->parent->color == RED){
-					node->parent->color = BLACK;
-					w->color = RED;
-					break;
-				}
-				else{
-					node->parent->color = BLACK;
-					w->color = RED;
+			if (brothers->left->color == BLACK && brothers->right->color == BLACK)
+			{
+					brothers->color = RED;
 					node = node->parent;
-					continue;
-				}
 			}
 
 			//3
-			if (w->left->color == BLACK){
-				w->color = RED;
-				w->right->color = BLACK;
-				w = node->parent->left;
+			else if (brothers->left->color == BLACK)
+			{
+				brothers->color = RED;
+				brothers->right->color = BLACK;
+				brothers = node->parent->left;
 			}
 
 			//4
-			w->color = w->parent->color;
+			brothers->color = brothers->parent->color;
 			node->parent->color = BLACK;
-			w->left->color = BLACK;
+			brothers->left->color = BLACK;
 			right_rotate(tree, node->parent);
 			node = tree->root;
 		}
 	}
+	node->color = BLACK;
 }
 
 int rb_delete( rb_tree * tree, void *key )
@@ -334,6 +327,8 @@ int rb_delete( rb_tree * tree, void *key )
 		min_node = delete_node->right;
 		while (min_node != tree->nil && min_node->left != tree->nil)
 			min_node = min_node->left;
+		
+		//fix_node = min_node->left;
 
 		if (delete_node->key)
 			free(delete_node->key);
@@ -343,6 +338,7 @@ int rb_delete( rb_tree * tree, void *key )
 		delete_node->key = min_node->key;
 		delete_node->value = min_node->value;	
 		transplant(tree, min_node, min_node->right);
+		
 		delete_node = min_node;
 	}
 
@@ -356,9 +352,10 @@ int rb_delete( rb_tree * tree, void *key )
 		fix_node = delete_node->left;
 		transplant(tree, delete_node, delete_node->left);
 	}
-	free(delete_node);
+	
 	if ( delete_node->color == BLACK )
 		delete_fix_up(tree, fix_node);
+	free(delete_node);
 	return 1;
 }
 
@@ -437,23 +434,6 @@ void destory_iterator(iterator *itr)
 	free(itr);
 }
 
-
-/*
-void destroy_rb(rb_tree * tree)
-{
-	iterator * itr = get_iterator(tree);
-
-	while( has_next(tree, itr) )
-	{
-		const rb_node *node = get_next(tree, itr);
-		rb_delete(tree, node->key);
-		reset(tree, itr);
-	}
-	free(tree->nil);
-	free(tree);
-	free(itr);
-}
-	*/
 void destroy_rb(rb_tree * tree)
 {
 	stack * st = get_stack();
