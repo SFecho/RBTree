@@ -23,6 +23,6 @@ struct _stack
 
 stack * get_stack ();
 
-void free_stack(stack * st);
+void destory_stack(stack * st);
 
 #endif

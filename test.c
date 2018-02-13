@@ -42,24 +42,27 @@ void displayFunc(void *p)
 
 int main( int argc,char* argv[] )
 {
-	rb_tree * tree = init_rb_tree( cmp );
+	rb_tree * tree = get_rb_tree( cmp );
 
 	int i = 11;
 	for (i = 0; i < 7; i++ )
-		rb_insert(tree, &i, &i, sizeof(int), sizeof(int));
-
-	inorder_traversal(tree, displayFunc);
-	printf("\n");
+		tree->rb_insert(tree, &i, &i, sizeof(int), sizeof(int));
 	
-	for (i = 0; i < 7; i++)
-		rb_delete(tree, &i);
-
-	inorder_traversal(tree, displayFunc);
+	iterator * itr = get_iterator(tree);
+	
+	while( itr->has_next(tree, itr) )
+	{
+		const rb_node * node = itr->get_next(tree, itr);
+		printf("%d", *(int*)(node->key));
+		if (node->color == BLACK)
+			printf("B\t");
+		else
+			printf("R\t");
+	}
 	printf("\n");
 	preorder_traversal(tree, tree->root);
 	printf("\n");
-	
-	rb_destroy(tree);
+	destroy_rb(tree);
 
 
 	return 0;

@@ -53,28 +53,24 @@ int get_size( stack *this )
 {
 	return this->size;
 }
-	
-void clear( stack * this )
-{
-	st_node * p = NULL;
-	
-	while( this->top != NULL )
-	{
-		p = this->top->next;
-		this->top->next = p->next;
-		if( p->data != NULL )
-			free(p->data);
-		free(p);	
-	}
-	this->size = 0;
-}
-	
+
 int empty(stack * this)
 {
 	if( this->top == NULL )
 		return 1;
 	return 0;
+}	
+	
+void clear( stack * this )
+{
+	st_node * p = NULL;
+	
+	while( this && !empty(this) )
+		pop(this);
+	this->size = 0;
 }
+	
+
 
 
 stack * get_stack ()
@@ -92,7 +88,7 @@ stack * get_stack ()
 
 
 
-void free_stack(stack * st)
+void destory_stack(stack * st)
 {
 	st->clear(st);
 	free(st);

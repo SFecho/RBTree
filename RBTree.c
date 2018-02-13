@@ -3,24 +3,7 @@
 #include <malloc.h>
 #include <assert.h>
 #include <string.h>
-
-rb_tree * init_rb_tree( int (*cmp)(const void *first, const void *second) )
-{
-	rb_tree * tree = (rb_tree *)malloc( sizeof(rb_tree) );
-	assert(tree != NULL );
-	tree->cmp = cmp;	
-	
-	rb_node *node = (rb_node *)malloc( sizeof(rb_node) ); 
-	node->color = BLACK;
-	node->left = node->right = node->parent = node;
-	
-	node->key = node->value = NULL;
-	
-	tree->root = tree->nil = node;
-	
-	return tree;
-}
-
+#include <stdio.h>
 /**
   *×óÐýº¯Êý
   *
@@ -379,54 +362,149 @@ int rb_delete( rb_tree * tree, void *key )
 	return 1;
 }
 
-static void rb_del_all_node(rb_tree * tree, rb_node *node)
+
+
+rb_tree * get_rb_tree( int (*cmp)(const void *first, const void *second) )
 {
-	if (node != tree->nil)
-	{
-		rb_del_all_node(tree, node->left);
-		rb_del_all_node(tree, node->right);
-		if (node->key != NULL)
-			free(node->key);
-		if (node->value != NULL)
-			free(node->value);
-		free(node);
-	}
+	rb_tree * tree = (rb_tree *)malloc( sizeof(rb_tree) );
+	assert(tree != NULL );
+	
+	rb_node *node = (rb_node *)malloc( sizeof(rb_node) ); 
+	node->color = BLACK;
+	node->left = node->right = node->parent = node;
+	
+	node->key = node->value = NULL;
+	
+	tree->root = tree->nil = node;
+	
+	tree->cmp = cmp;	
+	tree->rb_insert = rb_insert;
+	tree->get_value = get_value;
+	tree->rb_delete = rb_delete;
+	return tree;
 }
 
-void rb_destroy(rb_tree * tree)
+
+
+int has_next( rb_tree * tree, iterator *itr )
 {
-	rb_del_all_node(tree, tree->root);
+	if( itr->p != tree->nil || !itr->st->empty(itr->st) )
+		return 1;
+	itr->p = tree->root;
+	return 0;
+}
+
+const rb_node* const get_next( rb_tree * tree, iterator *itr )
+{
+	rb_node * node = tree->nil;
+	rb_node ** st_p = &itr->p;
+	while( itr->p != tree->nil )
+	{
+		itr->st->push(itr->st, st_p, sizeof(rb_node*) );
+		itr->p = itr->p->left;
+	}
+	
+	if( !itr->st->empty(itr->st) )
+	{
+		itr->p = *(rb_node **)itr->st->get_top(itr->st);
+		node = itr->p;
+		itr->p = itr->p->right;
+		itr->st->pop(itr->st);
+	}
+	return node;
+}
+
+void reset( rb_tree * tree, iterator *itr )
+{
+	itr->p = tree->root;
+	itr->st->clear(itr->st);
+}
+
+iterator * get_iterator( rb_tree * tree )
+{
+	iterator * itr = (iterator *)malloc(sizeof(iterator));
+	itr->p = tree->root;
+	itr->st = get_stack();
+	itr->has_next = has_next;
+	itr->get_next = get_next;
+	itr->reset = reset;
+	return itr;
+}
+
+void destory_iterator(iterator *itr)
+{
+	destory_stack(itr->st);
+	free(itr);
+}
+
+
+/*
+void destroy_rb(rb_tree * tree)
+{
+	iterator * itr = get_iterator(tree);
+
+	while( has_next(tree, itr) )
+	{
+		const rb_node *node = get_next(tree, itr);
+		rb_delete(tree, node->key);
+		reset(tree, itr);
+	}
+	free(tree->nil);
+	free(tree);
+	free(itr);
+}
+	*/
+void destroy_rb(rb_tree * tree)
+{
+	stack * st = get_stack();
+	rb_node **current = &tree->root;
+	rb_node **temp = NULL;
+	rb_node * st_top = tree->nil;
+	
+	if( *current != tree->nil )
+		st->push(st, current, sizeof(rb_node *) );
+	while( !st->empty(st) )
+	{
+		st_top = *(rb_node **)st->get_top(st);
+		if( st_top->left != *current && st_top->right != *current)
+		{
+			current = (rb_node **)st->get_top(st);
+			while( (*current) != tree->nil )
+			{
+				if( (*current)->left != tree->nil )
+				{
+					if( (*current)->right != tree->nil)
+					{
+						temp = &(*current)->right;
+						st->push(st, temp, sizeof(rb_node *) );
+					}
+					temp = &(*current)->left;
+					st->push(st, temp, sizeof(rb_node *) );
+					
+				}
+				else
+				{
+					temp = &(*current)->right;
+					st->push(st, temp, sizeof(rb_node *) );
+				}
+				current = (rb_node **)st->get_top(st);
+			}
+			st->pop(st);
+		}
+		
+		current = (rb_node **)st->get_top(st);
+
+		st->pop(st);
+		if( (*current)->key != NULL )
+			free((*current)->key);
+		if( (*current)->value != NULL )	
+			free((*current)->value);
+		free(*current);
+	}
+	destory_stack(st);
 	free(tree->nil);
 	free(tree);
 }
-
-void inorder_traversal( rb_tree * tree , void (* display)(void *data) )
-{
-	stack *st = get_stack();
-	
-	rb_node * p =  tree->root;
-	
-	while( !st->empty(st) || p != tree->nil )
-	{
-		while( p != tree->nil )
-		{
-			st->push(st, p ,sizeof(rb_node) );
-			p = p->left;
-		}
-		
-		if( !st->empty(st) )
-		{
-			p = (rb_node *)st->get_top(st);
-			display(p);
-			p = p->right;
-			st->pop(st);
-		}
-	}
-	
-	free_stack(st);
-}
-
-
 
 
 
