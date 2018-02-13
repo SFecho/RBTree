@@ -8,7 +8,7 @@ stack:stack.c
 RBTree: RBTree.c
 	$(CC) -c RBTree.c -g -o RBTree.o
 	
-test: test.c
+test: test.c 
 	$(CC) -c test.c -g -o test.o
 	
 main: stack.o RBTree.o test.o

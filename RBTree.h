@@ -45,7 +45,7 @@ struct _iterator
 	rb_node * p;
 	stack *st;
 	int (* has_next)( rb_tree * tree, iterator *itr );
-	const rb_node* const (* get_next)( rb_tree * tree, iterator *itr );
+	rb_node* (* get_next)( rb_tree * tree, iterator *itr );
 	void (* reset)(rb_tree * tree, iterator *itr );
 };
 
@@ -55,7 +55,7 @@ void destroy_rb(rb_tree * tree);
 
 iterator * get_iterator( rb_tree * tree );
 
-void destory_iterator(iterator *itr);
+void destroy_iterator(iterator *itr);
 
 
 

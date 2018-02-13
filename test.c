@@ -1,8 +1,10 @@
 #include <stdio.h>
-#include "RBTree.h"
 #include "stack.h"
+#include "RBTree.h"
 #include <stdlib.h>
+#include <time.h>
 
+//键值比较函数
 int cmp(const void *first, const void *second)
 {
 	int * p = (int *)first;
@@ -15,6 +17,7 @@ int cmp(const void *first, const void *second)
 	return 1;
 }
 
+//前序遍历函数
 void  preorder_traversal(rb_tree *tree, rb_node *node)
 {
 	if (node != tree->nil)
@@ -30,27 +33,27 @@ void  preorder_traversal(rb_tree *tree, rb_node *node)
 }
 
 
-void displayFunc(void *p)
+int main(int argc, char* argv[])
 {
-	rb_node *node = (rb_node *)p;
-	printf("%d", *(int*)(node->key) ); 
-	if (node->color == BLACK)
-		printf("B\t");
-	else
-		printf("R\t");
-}
-
-int main( int argc,char* argv[] )
-{
-	rb_tree * tree = get_rb_tree( cmp );
-
-	int i = 11;
-	for (i = 0; i < 8; i++ )
-		tree->rb_insert(tree, &i, &i, sizeof(int), sizeof(int));
 	
+	rb_tree * tree = get_rb_tree(cmp);
+	srand((unsigned)time(NULL));
+
+	int node_num = rand() % 50;
+
+	for (int i = 0; i < node_num; i++)
+		tree->rb_insert(tree, &i, &i, sizeof(int), sizeof(int));	//插入节点
 	iterator * itr = get_iterator(tree);
+
 	
-	while( itr->has_next(tree, itr) )
+	int i = rand() % node_num;
+
+	printf("delete %d\n", i);
+	tree->rb_delete(tree, &i);
+
+	printf("中序遍历：");
+	itr->reset(tree, itr);				//重置迭代器
+	while (itr->has_next(tree, itr))	//通过迭代器进行中序遍历
 	{
 		const rb_node * node = itr->get_next(tree, itr);
 		printf("%d", *(int*)(node->key));
@@ -59,30 +62,16 @@ int main( int argc,char* argv[] )
 		else
 			printf("R\t");
 	}
+
 	printf("\n");
+	printf("前序遍历：");
 	preorder_traversal(tree, tree->root);
 	printf("\n");
-	printf("delete %d\n", 6);
-	
-	i= 6;
-	
-	tree->rb_delete(tree, &i );
-	
-	
-	while( itr->has_next(tree, itr) )
-	{
-		const rb_node * node = itr->get_next(tree, itr);
-		printf("%d", *(int*)(node->key));
-		if (node->color == BLACK)
-			printf("B\t");
-		else
-			printf("R\t");
-	}
+
 	printf("\n");
-	preorder_traversal(tree, tree->root);
-	printf("\n");
-	printf("\n");
+
 	destroy_rb(tree);
 
+	destroy_iterator(itr);
 	return 0;
 }

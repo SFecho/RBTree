@@ -84,12 +84,13 @@ stack * get_stack ()
 	st->get_size = get_size;
 	st->empty = empty;
 	st->get_top = get_top;
+	return st;
 }
 
 
 
 void destory_stack(stack * st)
 {
-	st->clear(st);
+	clear(st);
 	free(st);
 }
